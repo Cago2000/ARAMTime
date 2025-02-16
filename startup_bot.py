@@ -8,12 +8,14 @@ def load_json(filename):
     with open(filename, 'r') as json_file:
         return json.load(json_file)
 
-if getattr(sys, 'frozen', False):  # Running as an EXE
-    base_path = os.path.dirname(sys.executable)
-else:  # Running as a .py script
-    base_path = os.path.dirname(os.path.abspath(__file__))
+def get_base_path():
+    if getattr(sys, 'frozen', False): #Running as an EXE
+        return os.path.dirname(sys.executable)
+    else: #Running as a .py script
+        return os.path.dirname(os.path.abspath(__file__))
+
+base_path = get_base_path()
 bot_token_path = os.path.join(base_path, "bot_token.json")
-print(bot_token_path)
 token = load_json(bot_token_path)
 BOT_TOKEN = token["bot_token"]
 
@@ -33,20 +35,25 @@ async def on_presence_update(before, after):
     user_ids = params["discord_user_ids"]
     your_user_id = params["your_discord_user_id"]
     game_name = params["game_name"]
-    if user_ids is None or len(user_ids) == 0:
+
+    if user_ids is None or after.id not in user_ids:
         return
-    if after.id in user_ids:
-        if after.activity is None:
-            return
-        game_match = True if before.activity is None else before.activity.details == game_name
-        if after.activity.details == game_name and game_match and after.activity.session_id is not None:
-            print(before, before.activity)
-            print(after, after.activity)
-            user = await client.fetch_user(your_user_id)
-            if user is None:
-                return
-            print(f'{after.name} is now playing {after.activity.name}!')
-            current_time = datetime.now().strftime("%H:%M")
-            await user.send(f"🔔 {after.name} started playing {game_name}! ({current_time})")
+
+    print(f'before: {before}. {before.activity}')
+    print(f'after: {after}. {after.activity}')
+    print("---------------------------------------")
+
+    if after.activity is None or after.activity.details != game_name:
+        return
+
+    if before is None or before.activity.details == game_name:
+        return
+
+    user = await client.fetch_user(your_user_id)
+    if not user:
+        return
+
+    current_time = datetime.now().strftime("%H:%M")
+    await user.send(f"🔔 {after.name} started playing {game_name}! ({current_time})")
 
 client.run(BOT_TOKEN)
