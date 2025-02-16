@@ -1,7 +1,7 @@
 **/.idea
 **/.venv
 **/__pycache__
-bot_token.json
+JSONs/
 *.ico
 /build
 /dist
