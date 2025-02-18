@@ -43,11 +43,13 @@ async def on_presence_update(before, after):
     print(f'after: {after}, {after.activity}')
     print("---------------------------------------")
 
-    if after.activity is None or after.activity.details != game_name:
+    if after.activity is None:
         return
-
-    if before is None or before.activity.details == game_name:
+    if after.activity.details != game_name:
         return
+    if before.activity is not None:
+        if before.activity.details == game_name:
+            return
 
     user = await client.fetch_user(your_user_id)
     if not user:
